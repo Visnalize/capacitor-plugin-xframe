@@ -1,7 +1,7 @@
 {
   "name": "capacitor-plugin-xframe",
-  "version": "0.0.1",
-  "description": "Capacitor plugin to bypass CORS & same origin policy for iframe.",
+  "version": "0.1.0",
+  "description": "Capacitor plugin to bypass CORS & same origin policy for iframes.",
   "main": "dist/plugin.cjs.js",
   "module": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
@@ -45,6 +45,7 @@
   },
   "devDependencies": {
     "@capacitor/android": "^4.0.0",
+    "@capacitor/cli": "^4.3.0",
     "@capacitor/core": "^4.0.0",
     "@capacitor/docgen": "^0.0.18",
     "@capacitor/ios": "^4.0.0",
