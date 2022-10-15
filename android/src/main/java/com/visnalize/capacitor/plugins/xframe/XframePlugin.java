@@ -1,6 +1,5 @@
 package com.visnalize.capacitor.plugins.xframe;
 
-import android.webkit.MimeTypeMap;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
@@ -13,10 +12,7 @@ import com.getcapacitor.PluginConfig;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
-import java.nio.file.Files;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import okhttp3.Response;
 
@@ -25,21 +21,12 @@ import okhttp3.Response;
 public class XframePlugin extends Plugin {
     private final Xframe xframe = new Xframe();
     private final String PLUGIN_ID = "Xframe";
+    private final String EVENT_LOAD = "onLoad";
     private final String EVENT_ERROR = "onError";
 
     @Override
     public void load() {
         bridge.setWebViewClient(new BridgeWebViewClient(bridge) {
-            @Override
-            public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
-                JSObject result = new JSObject();
-                result.put("url", request.getUrl());
-                result.put("mimeType", errorResponse.getMimeType());
-                result.put("statusCode", errorResponse.getStatusCode());
-                result.put("message", errorResponse.getReasonPhrase());
-                notifyListeners(EVENT_ERROR, result);
-            }
-
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 PluginConfig config = bridge.getConfig().getPluginConfiguration(PLUGIN_ID);
@@ -54,18 +41,19 @@ public class XframePlugin extends Plugin {
                 try {
                     Map<String, String> requestHeaders = request.getRequestHeaders();
                     if (userAgent != null) requestHeaders.put("User-Agent", userAgent);
-                    Response _response = xframe.request(requestUrl, request.getMethod(), requestHeaders, null);
-                    Map<String, String> _responseHeaders = new HashMap<>();
-                    for (String headerName : _response.headers().names()) {
-                        _responseHeaders.put(headerName, _response.header(headerName));
+                    Response response = xframe.request(requestUrl, request.getMethod(), requestHeaders, null);
+                    boolean isOk = response.isSuccessful();
+
+                    if (!xframe.getMimeType(response).equals("text/html")) {
+                        return xframe.transform(response);
                     }
 
-                    return new WebResourceResponse("", "utf-8",
-                            _response.code(),
-                            _response.message().isEmpty() ? "OK" : _response.message(),
-                            _responseHeaders,
-                            Objects.requireNonNull(_response.body()).byteStream()
-                    );
+                    if (isOk) {
+                        notifyListeners(EVENT_LOAD, xframe.getDocumentData(response, requestUrl));
+                    } else {
+                        notifyListeners(EVENT_ERROR, xframe.getResponseError(response, requestUrl));
+                    }
+                    return xframe.transform(response);
                 } catch (Exception e) {
                     return super.shouldInterceptRequest(view, request);
                 }

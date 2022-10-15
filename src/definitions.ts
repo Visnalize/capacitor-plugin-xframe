@@ -4,24 +4,41 @@ import type { PluginListenerHandle } from '@capacitor/core';
 
 export interface XframePlugin {
   /**
-   * Registers the plugin to your app. This will override the `shouldInterceptRequest` behavior of your webview.
+   * Registers the plugin to your app.
+   *
+   * Registering this plugin will override the `shouldInterceptRequest` behavior of your webview.
    */
   register(): Promise<void>;
 
   /**
-   * Listens for any failed requests.
+   * Listens to requests of `document` type and returns some useful information.
+   */
+  addListener(
+    eventName: 'onLoad',
+    listener: LoadEventListener,
+  ): Promise<PluginListenerHandle> & PluginListenerHandle;
+
+  /**
+   * Listens to failed requests (of any type)
    */
   addListener(
     eventName: 'onError',
-    listener: ErrorListener,
+    listener: ErrorEventListener,
   ): Promise<PluginListenerHandle> & PluginListenerHandle;
 }
 
-export declare type ErrorListener = (error: ErrorDetails) => void;
+export declare type LoadEventListener = (eventData: LoadEventData) => void;
 
-export interface ErrorDetails {
+export declare type ErrorEventListener = (eventData: ErrorEventData) => void;
+
+export interface LoadEventData {
   url: string;
-  mimeType: string;
+  title: string;
+  favicon: string;
+}
+
+export interface ErrorEventData {
+  url: string;
   statusCode: number;
   message: string;
 }
