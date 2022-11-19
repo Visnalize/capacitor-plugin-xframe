@@ -38,6 +38,21 @@ Customize the outgoing requests' `User-Agent` header. Useful to modify the resul
 }
 ```
 
+### `ignore`
+
+A list of domains/URLs to ignore from intercepting.
+
+```json
+{
+  ...
+  "plugins": {
+    "Xframe": {
+      "ignore": ["google.com", "https://www.facebook.com"]
+    }
+  }
+}
+```
+
 ## API
 
 <docgen-index>

@@ -5,7 +5,6 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 
 import com.getcapacitor.BridgeWebViewClient;
-import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginConfig;
@@ -30,11 +29,19 @@ public class XframePlugin extends Plugin {
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 PluginConfig config = bridge.getConfig().getPluginConfiguration(PLUGIN_ID);
+                String[] ignore = config.getArray("ignore");
                 String userAgent = config.getString("userAgent");
                 String requestUrl = request.getUrl().toString();
+                boolean shouldIgnore = false;
+                for (String ignoredUrl : ignore) {
+                    if (requestUrl.contains(ignoredUrl)) {
+                        shouldIgnore = true;
+                        break;
+                    }
+                }
 
                 // intercepting guards
-                if (requestUrl.contains(bridge.getAppUrl()) || !request.getMethod().equals("GET")) {
+                if (shouldIgnore || requestUrl.contains(bridge.getAppUrl()) || !request.getMethod().equals("GET")) {
                     return super.shouldInterceptRequest(view, request);
                 }
 
