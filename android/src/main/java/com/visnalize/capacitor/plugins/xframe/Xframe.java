@@ -95,7 +95,7 @@ public class Xframe {
             ResponseBody responseBody = response.peekBody(Integer.MAX_VALUE);
             // a document response should not have an empty body
             return responseBody.string().isEmpty() ? null : responseBody.contentType();
-        } catch (IOException exception) {
+        } catch (Exception exception) {
             return null;
         }
     }
