@@ -58,8 +58,8 @@ A list of domains/URLs to ignore from intercepting.
 <docgen-index>
 
 * [`register()`](#register)
-* [`addListener('onLoad', ...)`](#addlisteneronload)
-* [`addListener('onError', ...)`](#addlisteneronerror)
+* [`addListener('onLoad', ...)`](#addlisteneronload-)
+* [`addListener('onError', ...)`](#addlisteneronerror-)
 * [Interfaces](#interfaces)
 * [Type Aliases](#type-aliases)
 
