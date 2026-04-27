@@ -13,18 +13,12 @@ export interface XframePlugin {
   /**
    * Listens to requests of `document` type and returns some useful information.
    */
-  addListener(
-    eventName: 'onLoad',
-    listener: LoadEventListener,
-  ): Promise<PluginListenerHandle> & PluginListenerHandle;
+  addListener(eventName: 'onLoad', listener: LoadEventListener): Promise<PluginListenerHandle>;
 
   /**
    * Listens to failed requests (of any type)
    */
-  addListener(
-    eventName: 'onError',
-    listener: ErrorEventListener,
-  ): Promise<PluginListenerHandle> & PluginListenerHandle;
+  addListener(eventName: 'onError', listener: ErrorEventListener): Promise<PluginListenerHandle>;
 }
 
 export declare type LoadEventListener = (eventData: LoadEventData) => void;
@@ -39,14 +33,15 @@ export interface LoadEventData {
 
 export interface ErrorEventData {
   url: string;
-  statusCode: number;
-  message: string;
+  statusCode?: number;
+  message?: string;
 }
 
 declare module '@capacitor/cli' {
   export interface PluginsConfigs {
     xframe?: {
-      userAgent: string;
+      flag?: string;
+      userAgent?: string;
     };
   }
 }

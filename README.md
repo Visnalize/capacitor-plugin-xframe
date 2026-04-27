@@ -2,11 +2,9 @@
 
 Capacitor plugin to bypass CORS & same origin policy for iframe.
 
-## Important note
+## How it works
 
-> This plugin overrides the `shouldInterceptRequest` behavior of your webview.
-
-As the core purpose of this plugin, `shouldInterceptRequest` needs to be leveraged to determine the outgoing requests and eliminate the __`X-Frame-Options`__ and __`Content-Security-Policy`__ headers present on the incoming responses for them to work in the embeded iframes.
+This plugin overrides the `shouldInterceptRequest` behavior of your webview to intercept the outgoing requests that are marked with a [`flag`](#flag) present in the request URL and modifies the resulted responses by eliminating the __`X-Frame-Options`__ and __`Content-Security-Policy`__ headers for them to work in the embeded iframes.
 
 ## Supported platforms
 
@@ -23,6 +21,23 @@ npx cap sync
 
 Add these options in either `capacitor.config.json` or `capacitor.config.ts`.
 
+### `flag`
+
+The plugin will look for this `flag` in the outgoing requests' URLs to determine whether to intercept them or not. You can set it to any string that you want, but make sure to add it to the URLs of the requests that you want to be intercepted. Default value is `xframe=true`.
+
+```json
+{
+  ...
+  "plugins": {
+    "Xframe": {
+      "flag": "xframe=true"
+    }
+  }
+}
+```
+
+For example, if you want to allow `https://youtube.com` to be embedded in an iframe, you can modify the URL to `https://youtube.com?xframe=true` and the plugin will intercept the request and modify the response to make it work in an iframe.
+
 ### `userAgent`
 
 Customize the outgoing requests' `User-Agent` header. Useful to modify the resulted responses.
@@ -33,21 +48,6 @@ Customize the outgoing requests' `User-Agent` header. Useful to modify the resul
   "plugins": {
     "Xframe": {
       "userAgent": "<your_custom_user_agent>"
-    }
-  }
-}
-```
-
-### `ignore`
-
-A list of domains/URLs to ignore from intercepting.
-
-```json
-{
-  ...
-  "plugins": {
-    "Xframe": {
-      "ignore": ["google.com", "https://www.facebook.com"]
     }
   }
 }
@@ -84,7 +84,7 @@ Registering this plugin will override the `shouldInterceptRequest` behavior of y
 ### addListener('onLoad', ...)
 
 ```typescript
-addListener(eventName: 'onLoad', listener: LoadEventListener) => Promise<PluginListenerHandle> & PluginListenerHandle
+addListener(eventName: 'onLoad', listener: LoadEventListener) => Promise<PluginListenerHandle>
 ```
 
 Listens to requests of `document` type and returns some useful information.
@@ -94,7 +94,7 @@ Listens to requests of `document` type and returns some useful information.
 | **`eventName`** | <code>'onLoad'</code>                                           |
 | **`listener`**  | <code><a href="#loadeventlistener">LoadEventListener</a></code> |
 
-**Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt; & <a href="#pluginlistenerhandle">PluginListenerHandle</a></code>
+**Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
 
 --------------------
 
@@ -102,7 +102,7 @@ Listens to requests of `document` type and returns some useful information.
 ### addListener('onError', ...)
 
 ```typescript
-addListener(eventName: 'onError', listener: ErrorEventListener) => Promise<PluginListenerHandle> & PluginListenerHandle
+addListener(eventName: 'onError', listener: ErrorEventListener) => Promise<PluginListenerHandle>
 ```
 
 Listens to failed requests (of any type)
@@ -112,7 +112,7 @@ Listens to failed requests (of any type)
 | **`eventName`** | <code>'onError'</code>                                            |
 | **`listener`**  | <code><a href="#erroreventlistener">ErrorEventListener</a></code> |
 
-**Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt; & <a href="#pluginlistenerhandle">PluginListenerHandle</a></code>
+**Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
 
 --------------------
 

@@ -13,7 +13,9 @@ import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
+import okhttp3.ConnectionPool;
 import okhttp3.Headers;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -23,7 +25,9 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 public class Xframe {
-    OkHttpClient client = new OkHttpClient();
+    OkHttpClient client = new OkHttpClient.Builder()
+            .connectionPool(new ConnectionPool(10, 5, TimeUnit.MINUTES))
+            .build();
 
     public Response request(String url, String method, Map<String, String> headers, RequestBody body) throws IOException {
         Request _request = new Request.Builder()
@@ -57,14 +61,14 @@ public class Xframe {
     public JSObject getDocumentData(Response response, String requestUrl) throws IOException {
         // as the response body can only be consumed once,
         // use `peekBody` to create a copy to work around this limitation
-        ResponseBody responseBody = response.peekBody(Long.MAX_VALUE);
-        Document doc = Jsoup.parse(responseBody.byteStream(), null, "");
-        Element faviconElem = doc.head().selectFirst("[rel='icon']");
+        ResponseBody responseBody = response.peekBody(1024 * 1024); // peek only the first 1MB for memory safety
+        Document doc = Jsoup.parse(responseBody.byteStream(), null, requestUrl);
+        Element faviconElem = doc.head().selectFirst("[rel='icon'], [rel='shortcut icon']");
 
         JSObject result = new JSObject();
         result.put("url", requestUrl);
         result.put("title", doc.title());
-        result.put("favicon", faviconElem == null ? "" : faviconElem.attr("href"));
+        result.put("favicon", faviconElem == null ? "" : faviconElem.attr("abs:href"));
         return result;
     }
 
@@ -73,6 +77,12 @@ public class Xframe {
         result.put("url", requestUrl);
         result.put("statusCode", response.code());
         result.put("message", response.message());
+        return result;
+    }
+
+    public JSObject getGenericError(String requestUrl) {
+        JSObject result = new JSObject();
+        result.put("url", requestUrl);
         return result;
     }
 
@@ -89,14 +99,6 @@ public class Xframe {
     }
 
     private MediaType getResponseType(Response response) {
-        try {
-            // as the response body can only be consumed once,
-            // use `peekBody` to create a copy to work around this limitation
-            ResponseBody responseBody = response.peekBody(Integer.MAX_VALUE);
-            // a document response should not have an empty body
-            return responseBody.string().isEmpty() ? null : responseBody.contentType();
-        } catch (Exception exception) {
-            return null;
-        }
+        return response.body() != null ? response.body().contentType() : null;
     }
 }
