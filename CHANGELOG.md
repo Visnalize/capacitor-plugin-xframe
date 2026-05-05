@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 8.2.0
+
+- 💥 Breaking change: Due to the reliability issues with the `flag` option, it has been removed. The plugin now intercepts all requests once `start()` is called, and stops intercepting when `stop()` is called.
+
 ## 8.1.0
 
 - 💥 Breaking change: The behavior of this plugin has been adjusted to only intercept requests with the URLs matching the pattern specified with the `flag` option, rather than intercepting almost all requests, which affected performance and memory usage.

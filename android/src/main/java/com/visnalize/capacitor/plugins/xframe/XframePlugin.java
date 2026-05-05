@@ -1,6 +1,5 @@
 package com.visnalize.capacitor.plugins.xframe;
 
-import android.util.LruCache;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
@@ -17,7 +16,6 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
-import java.util.Objects;
 
 import okhttp3.Response;
 
@@ -28,49 +26,41 @@ public class XframePlugin extends Plugin {
     private final String PLUGIN_ID = "Xframe";
     private final String EVENT_LOAD = "onLoad";
     private final String EVENT_ERROR = "onError";
-    private final String WWW = "www.";
-    private final LruCache<String, Boolean> interceptedDomains = new LruCache<>(200);
-    private String lastInterceptedDomain = null;
+    private boolean enabled = false;
+
+    private String getHost(String url) {
+        if (url == null || url.isEmpty()) {
+            return null;
+        }
+
+        try {
+            return new URL(url).getHost();
+        } catch (MalformedURLException e) {
+            return null;
+        }
+    }
 
     @Override
     public void load() {
         bridge.setWebViewClient(new BridgeWebViewClient(bridge) {
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                if (!enabled) {
+                    return super.shouldInterceptRequest(view, request);
+                }
+
                 PluginConfig config = bridge.getConfig().getPluginConfiguration(PLUGIN_ID);
                 String userAgent = config.getString("userAgent");
-                String flag = config.getString("flag", "xframe=true");
                 String requestUrl = request.getUrl().toString();
-                Map<String, String> requestHeaders = request.getRequestHeaders();
+                String selfDomain = getHost(bridge.getAppUrl());
 
-                String refererDomain = "";
-                try {
-                    refererDomain = new URL(requestHeaders.get("Referer")).getHost();
-                } catch (MalformedURLException e) {
+                if (requestUrl.contains(selfDomain) || !request.getMethod().equals("GET")) {
                     return super.shouldInterceptRequest(view, request);
-                }
-
-                boolean hasFlagInUrl = requestUrl.contains(flag);
-                boolean isSubresourceOfIntercepted = !hasFlagInUrl &&
-                        ((refererDomain != null && interceptedDomains.get(refererDomain) != null) || lastInterceptedDomain != null);
-
-                if (!hasFlagInUrl && !isSubresourceOfIntercepted) {
-                    return super.shouldInterceptRequest(view, request);
-                }
-
-                if (hasFlagInUrl) {
-                    String domain = request.getUrl().getHost();
-                    interceptedDomains.put(domain, true);
-                    // also cache www version of the domain to handle cases where subresources use www while main url doesn't or vice versa
-                    if (!Objects.requireNonNull(domain).startsWith(WWW))
-                        interceptedDomains.put(WWW + domain, true);
-                    lastInterceptedDomain = domain;
-                } else {
-                    lastInterceptedDomain = null;
                 }
 
                 Logger.debug(PLUGIN_ID, "Intercepting url: " + requestUrl);
                 try {
+                    Map<String, String> requestHeaders = request.getRequestHeaders();
                     if (userAgent != null) requestHeaders.put("User-Agent", userAgent);
                     Response response = xframe.request(requestUrl, request.getMethod(), requestHeaders, null);
 
@@ -84,6 +74,7 @@ public class XframePlugin extends Plugin {
                             Logger.debug(PLUGIN_ID, "Document data: " + String.valueOf(documentData));
                             notifyListeners(EVENT_LOAD, documentData);
                         } else {
+                            Logger.debug(PLUGIN_ID, "Error retrieving response for: " + requestUrl);
                             notifyListeners(EVENT_ERROR, xframe.getResponseError(response, requestUrl));
                         }
                         return xframe.transform(response);
@@ -101,9 +92,14 @@ public class XframePlugin extends Plugin {
     }
 
     @PluginMethod
-    public void register(PluginCall call) {
-        // left blank intentionally
-        // as the plugin modifies the WebViewClient, it seems that can only be done on plugin `load`
-        // this function serves as a placeholder for the JS code to register the plugin.
+    public void start(PluginCall call) {
+        enabled = true;
+        call.resolve();
+    }
+
+    @PluginMethod
+    public void stop(PluginCall call) {
+        enabled = false;
+        call.resolve();
     }
 }

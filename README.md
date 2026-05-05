@@ -4,7 +4,7 @@ Capacitor plugin to bypass CORS & same origin policy for iframe.
 
 ## How it works
 
-This plugin overrides the `shouldInterceptRequest` behavior of your webview to intercept the outgoing requests that are marked with a [`flag`](#flag) present in the request URL and modifies the resulted responses by eliminating the __`X-Frame-Options`__ and __`Content-Security-Policy`__ headers for them to work in the embeded iframes.
+This plugin overrides the `shouldInterceptRequest` behavior of your webview to intercept the outgoing requests and modifies the resulted responses by eliminating the __`X-Frame-Options`__ and __`Content-Security-Policy`__ headers for them to work in the embeded iframes.
 
 ## Supported platforms
 
@@ -20,23 +20,6 @@ npx cap sync
 ## Config options
 
 Add these options in either `capacitor.config.json` or `capacitor.config.ts`.
-
-### `flag`
-
-The plugin will look for this `flag` in the outgoing requests' URLs to determine whether to intercept them or not. You can set it to any string that you want, but make sure to add it to the URLs of the requests that you want to be intercepted. Default value is `xframe=true`.
-
-```json
-{
-  ...
-  "plugins": {
-    "Xframe": {
-      "flag": "xframe=true"
-    }
-  }
-}
-```
-
-For example, if you want to allow `https://youtube.com` to be embedded in an iframe, you can modify the URL to `https://youtube.com?xframe=true` and the plugin will intercept the request and modify the response to make it work in an iframe.
 
 ### `userAgent`
 
@@ -57,7 +40,8 @@ Customize the outgoing requests' `User-Agent` header. Useful to modify the resul
 
 <docgen-index>
 
-* [`register()`](#register)
+* [`start()`](#start)
+* [`stop()`](#stop)
 * [`addListener('onLoad', ...)`](#addlisteneronload-)
 * [`addListener('onError', ...)`](#addlisteneronerror-)
 * [Interfaces](#interfaces)
@@ -68,15 +52,24 @@ Customize the outgoing requests' `User-Agent` header. Useful to modify the resul
 <docgen-api>
 <!--Update the source file JSDoc comments and rerun docgen to update the docs below-->
 
-### register()
+### start()
 
 ```typescript
-register() => Promise<void>
+start() => Promise<void>
 ```
 
-Registers the plugin to your app.
+Starts intercepting requests to modify responses and remove iframes restrictions.
 
-Registering this plugin will override the `shouldInterceptRequest` behavior of your webview.
+--------------------
+
+
+### stop()
+
+```typescript
+stop() => Promise<void>
+```
+
+Stops intercepting requests and restores default behavior of the WebView.
 
 --------------------
 

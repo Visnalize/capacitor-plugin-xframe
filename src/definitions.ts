@@ -4,11 +4,14 @@ import type { PluginListenerHandle } from '@capacitor/core';
 
 export interface XframePlugin {
   /**
-   * Registers the plugin to your app.
-   *
-   * Registering this plugin will override the `shouldInterceptRequest` behavior of your webview.
+   * Starts intercepting requests to modify responses and remove iframes restrictions.
    */
-  register(): Promise<void>;
+  start(): Promise<void>;
+
+  /**
+   * Stops intercepting requests and restores default behavior of the WebView.
+   */
+  stop(): Promise<void>;
 
   /**
    * Listens to requests of `document` type and returns some useful information.
@@ -40,7 +43,6 @@ export interface ErrorEventData {
 declare module '@capacitor/cli' {
   export interface PluginsConfigs {
     xframe?: {
-      flag?: string;
       userAgent?: string;
     };
   }
